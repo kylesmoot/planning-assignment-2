@@ -35,9 +35,8 @@ class BoardState:
         Input: a tuple (col, row)
         Output: an integer in the interval [0, 55] inclusive
 
-        TODO: You need to implement this.
         """
-        raise NotImplementedError("TODO: Implement this function")
+        return cr[0] + self.N_ROWS * cr[1]
 
     def decode_single_pos(self, n: int):
         """
@@ -46,9 +45,10 @@ class BoardState:
         Input: an integer in the interval [0, 55] inclusive
         Output: a tuple (col, row)
 
-        TODO: You need to implement this.
         """
-        raise NotImplementedError("TODO: Implement this function")
+        col = n % self.N_ROWS
+        row = n // self.N_ROWS
+        return (col, row)
 
     def is_termination_state(self):
         """
@@ -58,7 +58,6 @@ class BoardState:
         You can assume that `self.state` contains the current state of the board, so
         check whether self.state represents a termainal board state, and return True or False.
         
-        TODO: You need to implement this.
         """
         raise NotImplementedError("TODO: Implement this function")
 
@@ -73,9 +72,26 @@ class BoardState:
 
         Output: return True (if valid) or False (if not valid)
         
-        TODO: You need to implement this.
         """
-        raise NotImplementedError("TODO: Implement this function")
+        white = self.state[0:4]
+        white_ball = self.state[5]
+        black = self.state[6:10]
+        black_ball = self.state[11]
+
+        max_val = self.N_ROWS * self.N_COLS
+
+        white_valid = np.all([x < max_val and x >= 0 for x in white])
+        black_valid = np.all([x < max_val and x >= 0 for x in black])
+
+        white_ball_valid = white_ball in white and white_ball < max_val and white_ball >= 0
+        black_ball_valid = black_ball in black and white_ball < max_val and white_ball >= 0
+
+        # test for overlap
+        overlap = np.concatenate((white, black))
+        u, c = np.unique(overlap, return_counts=True)
+        overlap_valid = np.all([x == 1 for x in c])
+
+        return white_valid and white_ball_valid and black_valid and black_ball_valid and overlap_valid
 
 class Rules:
 
