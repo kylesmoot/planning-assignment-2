@@ -36,7 +36,7 @@ class BoardState:
         Output: an integer in the interval [0, 55] inclusive
 
         """
-        return cr[0] + self.N_ROWS * cr[1]
+        return cr[0] + self.N_COLS * cr[1]
 
     def decode_single_pos(self, n: int):
         """
@@ -46,8 +46,8 @@ class BoardState:
         Output: a tuple (col, row)
 
         """
-        col = n % self.N_ROWS
-        row = n // self.N_ROWS
+        col = n % self.N_COLS
+        row = n // self.N_COLS
         return (col, row)
 
     def is_termination_state(self):
@@ -59,7 +59,17 @@ class BoardState:
         check whether self.state represents a termainal board state, and return True or False.
         
         """
-        raise NotImplementedError("TODO: Implement this function")
+        
+        if (self.is_valid()):
+            white = self.state[0:5]
+            white_ball = self.state[5]
+            black = self.state[6:11]
+            black_ball = self.state[11]
+            white_goal = np.any([x < 56 and x >= 49 and x == white_ball for x in white])
+            black_goal = np.any([x < 7 and x >= 0 and x == black_ball for x in black])
+            return white_goal or black_goal
+        else:
+            return False
 
     def is_valid(self):
         """
@@ -73,9 +83,9 @@ class BoardState:
         Output: return True (if valid) or False (if not valid)
         
         """
-        white = self.state[0:4]
+        white = self.state[0:5]
         white_ball = self.state[5]
-        black = self.state[6:10]
+        black = self.state[6:11]
         black_ball = self.state[11]
 
         max_val = self.N_ROWS * self.N_COLS
