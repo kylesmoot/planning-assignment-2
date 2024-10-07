@@ -86,6 +86,11 @@ class TestSearch:
         ((5,2), 0, True, ""),
         ((5,4), 0, True, ""),
         ((5,5), 0, True, ""),
+        ((0,15), 0, False, "not allowed"),
+        ((0,20), 0, False, "not allowed"),
+        ((0,13), 0, False, "not allowed"),
+        ((0,6), 0, False, "not allowed"),
+        ((4,0), 0, False, "not allowed"),
     ])
     def test_validate_action(self, action, player, is_valid, val_msg):
         sim = GameSimulator(None)

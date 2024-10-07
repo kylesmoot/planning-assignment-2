@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 class BoardState:
     """
@@ -61,10 +62,10 @@ class BoardState:
         """
         
         if (self.is_valid()):
-            white = self.state[0:5]
-            white_ball = self.state[5]
-            black = self.state[6:11]
-            black_ball = self.state[11]
+            white = self.get_white()
+            white_ball = self.get_white_ball()
+            black = self.get_black()
+            black_ball = self.get_black_ball()
             white_goal = np.any([x < 56 and x >= 49 and x == white_ball for x in white])
             black_goal = np.any([x < 7 and x >= 0 and x == black_ball for x in black])
             return white_goal or black_goal
@@ -83,10 +84,10 @@ class BoardState:
         Output: return True (if valid) or False (if not valid)
         
         """
-        white = self.state[0:5]
-        white_ball = self.state[5]
-        black = self.state[6:11]
-        black_ball = self.state[11]
+        white = self.get_white()
+        white_ball = self.get_white_ball()
+        black = self.get_black()
+        black_ball = self.get_black_ball()
 
         max_val = self.N_ROWS * self.N_COLS
 
@@ -102,11 +103,23 @@ class BoardState:
         overlap_valid = np.all([x == 1 for x in c])
 
         return white_valid and white_ball_valid and black_valid and black_ball_valid and overlap_valid
+    
+    def get_white(self):
+        return self.state[0:5]
+    
+    def get_white_ball(self):
+        return self.state[5]
+    
+    def get_black(self):
+        return self.state[6:11]
+    
+    def get_black_ball(self):
+        return self.state[11]
 
 class Rules:
 
     @staticmethod
-    def single_piece_actions(board_state, piece_idx):
+    def single_piece_actions(board_state: BoardState, piece_idx):
         """
         Returns the set of possible actions for the given piece, assumed to be a valid piece located
         at piece_idx in the board_state.state.
@@ -119,12 +132,45 @@ class Rules:
         Output: an iterable (set or list or tuple) of integers which indicate the encoded positions
             that piece_idx can move to during this turn.
         
-        TODO: You need to implement this.
         """
-        raise NotImplementedError("TODO: Implement this function")
+
+        actions = []
+
+        if (board_state.is_valid()):
+            white = board_state.get_white()
+            white_ball = board_state.get_white_ball()
+            black = board_state.get_black()
+            black_ball = board_state.get_black_ball()
+            piece = board_state.state[piece_idx]
+            pos = board_state.decode_single_pos(piece)
+
+            locs = [
+                (pos[0] + 1, pos[1] - 2),
+                (pos[0] - 1, pos[1] - 2),
+                (pos[0] + 2, pos[1] - 1),
+                (pos[0] - 2, pos[1] - 1),
+                (pos[0] + 2, pos[1] + 1),
+                (pos[0] - 2, pos[1] + 1),
+                (pos[0] + 1, pos[1] + 2),
+                (pos[0] - 1, pos[1] + 2),
+            ]
+
+            print(locs)
+
+            for l in locs:
+                enc_loc = board_state.encode_single_pos(l)
+                if (piece != white_ball and
+                    piece != black_ball and
+                    l[0] >= 0 and l[0] < board_state.N_COLS and
+                    l[1] >= 0 and l[1] < board_state.N_ROWS and
+                    enc_loc not in white and
+                    enc_loc not in black):
+                        actions.append(enc_loc)
+
+        return actions
 
     @staticmethod
-    def single_ball_actions(board_state, player_idx):
+    def single_ball_actions(board_state: BoardState, player_idx):
         """
         Returns the set of possible actions for moving the specified ball, assumed to be the
         valid ball for plater_idx  in the board_state
@@ -135,10 +181,53 @@ class Rules:
         
         Output: an iterable (set or list or tuple) of integers which indicate the encoded positions
             that player_idx's ball can move to during this turn.
-        
-        TODO: You need to implement this.
         """
-        raise NotImplementedError("TODO: Implement this function")
+
+        white = board_state.get_white()
+        black = board_state.get_black()
+
+        if player_idx == 0:
+            # white ball
+            pieces = white
+            ball = board_state.get_white_ball()
+            pieces_opp = black
+        else:
+            # black ball
+            pieces = black
+            ball = board_state.get_black_ball()
+            pieces_opp = white
+
+        actions = []
+
+        ball_pos = board_state.decode_single_pos(ball)
+
+        for piece in pieces:
+            if piece != ball:
+                pos = board_state.decode_single_pos(piece)
+
+                is_same_col = pos[0] == ball_pos[0]
+                is_same_row = pos[1] == ball_pos[1]
+
+                # diagonal pieces will have a slope of 1 or -1
+                slope = (ball_pos[1] - pos[1]) / (ball_pos[0] - pos[0])
+                is_diagonal = (slope == 1) or (slope == -1)
+
+                if (is_same_col or is_same_row or is_diagonal):
+                    # check to see if there are any opposing pieces in the way
+                    for opp in pieces_opp:
+                        pos_opp = board_state.decode_single_pos(opp)
+                        opp_same_col = pos_opp[0] == ball_pos[0]
+                        opp_same_row = pos_opp[1] == ball_pos[1]
+
+                        opp_slope = (ball_pos[1] - pos_opp[1]) / (ball_pos[0] - pos_opp[0])
+                        opp_diagonal = (opp_slope == 1) or (opp_slope == -1)
+
+                        if (not opp_same_col and
+                            not opp_same_row and
+                            not opp_diagonal):
+                                actions.append(piece)
+
+        return actions
 
 class GameSimulator:
     """
@@ -195,10 +284,22 @@ class GameSimulator:
               piece in the boardstate can be obtained, so relative_idx is the index relative to current player's
               pieces. Pieces with relative index 0,1,2,3,4 are block pieces that like knights in chess, and
               relative index 5 is the player's ball piece.
-            
-        TODO: You need to implement this.
         """
-        raise NotImplementedError("TODO: Implement this function")
+        actions = []
+        r = range(5) if player_idx == 0 else range(6, 11)
+        offset = 0 if player_idx == 0 else 6
+
+        for i in r:
+            moves = Rules.single_piece_actions(self.game_state, i)
+            print(moves)
+            for m in moves:
+                actions.append((i - offset, m)) # since this is a relative index, for player 2
+                                                # we need to subtract 6
+        moves = Rules.single_ball_actions(self.game_state, player_idx)
+        for m in moves:
+            actions.append((5, m))
+
+        return actions
 
     def validate_action(self, action: tuple, player_idx: int):
         """
@@ -212,13 +313,15 @@ class GameSimulator:
         Output:
             - if the action is valid, return True
             - if the action is not valid, raise ValueError
-        
-        TODO: You need to implement this.
         """
-        if False:
-            raise ValueError("For each case that an action is not valid, specify the reason that the action is not valid in this ValueError.")
-        if True:
-            return True
+
+        valid_actions = self.generate_valid_actions(player_idx)
+
+        for a in valid_actions:
+            if (action == a):
+                return True
+
+        raise ValueError('not allowed')
     
     def update(self, action: tuple, player_idx: int):
         """
