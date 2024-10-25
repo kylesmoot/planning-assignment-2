@@ -30,6 +30,8 @@ class TestSearch:
         gsp = GameStateProblem(b1, b2, 0)
         gsp.set_search_alg(alg)
         sln = gsp.search_alg_fnc()
+        print(sln)
+        print(type(sln))
 
         ## Single Step
         ref = [(tuple((tuple(b1.state), 0)), (0, 14)), (tuple((tuple(b2.state), 1)), None)]

@@ -65,7 +65,7 @@ class GameStateProblem(Problem):
 
         TODO: You need to set self.search_alg_fnc here
         """
-        self.search_alg_fnc = None
+        self.search_alg_fnc = self.search_algo
 
     def get_actions(self, state: tuple):
         """
@@ -136,3 +136,30 @@ class GameStateProblem(Problem):
         return solution ## Solution is an ordered list of (s,a)
     """
 
+    def search_algo(self):
+
+        frontier = queue.Queue()
+        frontier.put(self.initial_state)
+        
+        parent = {}
+        parent[self.initial_state] = (self.initial_state, None)
+        visited = set()
+
+        while not frontier.empty():
+            state = frontier.get()
+            if self.is_goal(state):
+                path = []
+                path.append((state, None))
+                while parent[state][1] is not None:
+                    path.append(parent[state])
+                    state = parent[state][0]
+
+                reverse_path = path[::-1]
+                return reverse_path
+
+            for next in self.get_actions(state):
+                if (state, next) not in visited:
+                    next_state = self.execute(state, next)
+                    frontier.put(next_state)
+                    visited.add((state, next))
+                    parent[next_state] = (state, next)

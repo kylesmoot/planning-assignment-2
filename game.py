@@ -155,8 +155,6 @@ class Rules:
                 (pos[0] - 1, pos[1] + 2),
             ]
 
-            print(locs)
-
             for l in locs:
                 enc_loc = board_state.encode_single_pos(l)
                 if (piece != white_ball and
@@ -291,7 +289,6 @@ class GameSimulator:
 
         for i in r:
             moves = Rules.single_piece_actions(self.game_state, i)
-            print(moves)
             for m in moves:
                 actions.append((i - offset, m)) # since this is a relative index, for player 2
                                                 # we need to subtract 6
